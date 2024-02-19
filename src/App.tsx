@@ -3,6 +3,7 @@ import "./App.css";
 import TaskList from "./components/taskList";
 import { Task } from "./interfaces/task";
 import InputPole from "./components/inputPole";
+import Modal from "react-modal";
 
 const App: FunctionComponent = () => {
   const [taskInput, setTaskInput] = useState("");
@@ -13,18 +14,28 @@ const App: FunctionComponent = () => {
   const [deadlineIndex, setDeadlineIndex] = useState<Number>();
   const [isDeadlineChecked, setIsDeadlineChecked] = useState(false);
   const [deadlineNewTask, setDeadlineNewTask] = useState("Додати дедлайн");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleAddTaskButtonClick = () => {
+    setIsModalOpen(true);
+  };
+
+  const handleModalClose = () => {
+    setIsModalOpen(false);
+    setTaskInput("");
+    setDeadlineNewTask("Додати дедлайн");
+  };
 
   useEffect(() => {
     loadTasksFromLocalStorage();
   }, []);
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (!(event.target.value === ' ' && event.target.value.length === 1)){
+    if (!(event.target.value === " " && event.target.value.length === 1)) {
       if (editingTask) {
         setEditedText(event.target.value);
       } else setTaskInput(event.target.value);
     }
-    
   };
 
   const handleInputKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -52,6 +63,7 @@ const App: FunctionComponent = () => {
       createTask(trimmedText, false, deadlineNewTask);
       setDeadlineNewTask("Додати дедлайн");
       setTaskInput("");
+      handleModalClose();
     }
     saveTasksToLocalStorage();
   };
@@ -111,16 +123,25 @@ const App: FunctionComponent = () => {
       <header>
         <h1>Список справ</h1>
       </header>
-      <InputPole
-        taskInput={taskInput}
-        isDeadlineChecked={isDeadlineChecked}
-        deadlineNewTask={deadlineNewTask}
-        setIsDeadlineChecked={setIsDeadlineChecked}
-        setDeadlineNewTask={setDeadlineNewTask}
-        handleInputChange={handleInputChange}
-        handleInputKeyDown={handleInputKeyDown}
-        addTask={addTask}
-      />
+      <button onClick={handleAddTaskButtonClick}>Додати завдання</button>
+      <Modal
+        isOpen={isModalOpen}
+        onRequestClose={handleModalClose}
+        contentLabel="Додати завдання"
+        className="modal">
+        <InputPole
+          taskInput={taskInput}
+          isDeadlineChecked={isDeadlineChecked}
+          deadlineNewTask={deadlineNewTask}
+          setIsDeadlineChecked={setIsDeadlineChecked}
+          setDeadlineNewTask={setDeadlineNewTask}
+          handleInputChange={handleInputChange}
+          handleInputKeyDown={handleInputKeyDown}
+          addTask={addTask}
+        />
+        <button onClick={handleModalClose}>Закрити</button>
+      </Modal>
+
       <TaskList
         tasks={tasks}
         editingTask={editingTask}
