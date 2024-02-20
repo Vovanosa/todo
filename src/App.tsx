@@ -4,6 +4,10 @@ import TaskList from "./components/taskList";
 import { Task } from "./interfaces/task";
 import InputPole from "./components/inputPole";
 import Modal from "react-modal";
+import axios from "axios";
+import Selector from "./components/ui-kit/selector/inputText/Selector";
+
+Modal.setAppElement("#root");
 
 const App: FunctionComponent = () => {
   const [taskInput, setTaskInput] = useState("");
@@ -15,6 +19,37 @@ const App: FunctionComponent = () => {
   const [isDeadlineChecked, setIsDeadlineChecked] = useState(false);
   const [deadlineNewTask, setDeadlineNewTask] = useState("Додати дедлайн");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedType, setSelectedType] = useState<string>("");
+  const [selectedDetail, setSelectedDetail] = useState<string>("");
+  const [options, setOptions] = useState<string[]>([]);
+  const [detailedOptions, setDetailedOptions] = useState<string[]>([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const response = await axios.get("https://ergast.com/api/f1/2024.json");
+      const data = response.data.MRData.RaceTable.Races[0];
+      const types = [1, 3, 5].map((index) => Object.keys(data)[index]);
+      setOptions(types);
+    };
+    fetchData();
+  }, []);
+
+  useEffect(() => {
+    const fetchOptions = async () => {
+      const response = await axios.get(`https://ergast.com/api/f1/2024.json`);
+      const data = response.data.MRData.RaceTable.Races;
+      const selectedOptions = data.map(
+        (item: typeof data) => item[selectedType]
+      );
+      setDetailedOptions(
+        Array.isArray(selectedOptions) ? selectedOptions : [selectedOptions]
+      );
+    };
+
+    if (selectedType) {
+      fetchOptions();
+    }
+  }, [selectedType]);
 
   const handleAddTaskButtonClick = () => {
     setIsModalOpen(true);
@@ -23,6 +58,7 @@ const App: FunctionComponent = () => {
   const handleModalClose = () => {
     setIsModalOpen(false);
     setTaskInput("");
+    setSelectedType("");
     setDeadlineNewTask("Додати дедлайн");
   };
 
@@ -60,7 +96,11 @@ const App: FunctionComponent = () => {
   const addTask = () => {
     const trimmedText = taskInput.trim();
     if (trimmedText !== "") {
-      createTask(trimmedText, false, deadlineNewTask);
+      createTask(
+        trimmedText + " " + selectedType + " " + selectedDetail,
+        false,
+        deadlineNewTask
+      );
       setDeadlineNewTask("Додати дедлайн");
       setTaskInput("");
       handleModalClose();
@@ -129,6 +169,19 @@ const App: FunctionComponent = () => {
         onRequestClose={handleModalClose}
         contentLabel="Додати завдання"
         className="modal">
+
+        <Selector
+          defaultOption={"Select data type"}
+          options={options}
+          setSelectedValue={setSelectedType}
+        />
+        {selectedType && (
+          <Selector
+            defaultOption={"Select exact data"}
+            options={detailedOptions}
+            setSelectedValue={setSelectedDetail}
+          />
+        )}
         <InputPole
           taskInput={taskInput}
           isDeadlineChecked={isDeadlineChecked}
