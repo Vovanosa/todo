@@ -5,7 +5,7 @@ import { Task } from "./interfaces/task";
 import InputPole from "./components/inputPole";
 import Modal from "react-modal";
 import axios from "axios";
-import Selector from "./components/ui-kit/selector/inputText/Selector";
+import Selector from "./components/ui-kit/selector";
 
 Modal.setAppElement("#root");
 
